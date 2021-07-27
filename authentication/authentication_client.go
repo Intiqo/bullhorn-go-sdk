@@ -6,19 +6,28 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/adwitiyaio/bullhorn"
 	"github.com/adwitiyaio/bullhorn/backend"
-	"github.com/gofrs/uuid"
 )
 
-var AccessToken string
-
 type Client struct {
-	B backend.Client
+	B backend.Service
 }
 
-// New Gets all the authentication data required to create API requests on Bullhorn
-func New(params *bullhorn.AuthParams) (*bullhorn.BullhornAuthentication, error) {
+// getClient Gets the authentication client
+func getClient() Client {
+	return Client{backend.GetBackendService()}
+}
+
+// NewAuthenticationData Gets all the authentication data required to create API requests on Bullhorn
+//
+// If you pass the refresh token as part of params, we'll use that to get a new api token,
+// if otherwise, we'll obtain the authorization code, get access token and then get a new api token
+//
+// Ensure that you store the response data somewhere so you can reuse it when the tokens expire
+func NewAuthenticationData(params *bullhorn.AuthParams) (*bullhorn.TokenResponse, error) {
 	return getClient().NewAuthenticationData(params)
 }
 
@@ -28,7 +37,7 @@ func New(params *bullhorn.AuthParams) (*bullhorn.BullhornAuthentication, error) 
 // if otherwise, we'll obtain the authorization code, get access token and then get a new api token
 //
 // Ensure that you store the response data somewhere so you can reuse it when the tokens expire
-func (c Client) NewAuthenticationData(params *bullhorn.AuthParams) (*bullhorn.BullhornAuthentication, error) {
+func (c Client) NewAuthenticationData(params *bullhorn.AuthParams) (*bullhorn.TokenResponse, error) {
 	var authCode string
 	var err error
 	if params.RefreshToken == "" {
@@ -45,7 +54,7 @@ func (c Client) NewAuthenticationData(params *bullhorn.AuthParams) (*bullhorn.Bu
 	if err != nil {
 		return nil, err
 	}
-	return &bullhorn.BullhornAuthentication{
+	return &bullhorn.TokenResponse{
 		AuthorizationCode:   authCode,
 		AccessTokenResponse: *authTokenData,
 		RestApiResponse:     *restApiData,
@@ -70,6 +79,9 @@ func (c Client) getAuthorizationCode(params *bullhorn.AuthParams) (string, error
 	rr, _, err := c.B.Call(requestUrl, "post", nil, query, nil)
 	if err != nil && !strings.Contains(err.Error(), "stopped after 0 redirects") {
 		return "", err
+	}
+	if rr == nil {
+		return "", errors.New("failed to parse raw response")
 	}
 	location := rr.RawResponse.Header.Get("location")
 	if location == "" {
@@ -108,7 +120,10 @@ func (c Client) getAccessAndRefreshToken(params *bullhorn.AuthParams, authCode s
 		return nil, err
 	}
 	var resp bullhorn.AccessTokenResponse
-	c.B.ParseResponse(cr.Data, &resp)
+	err = c.B.ParseResponse(cr.Data, &resp)
+	if err != nil {
+		return nil, err
+	}
 	return &resp, nil
 }
 
@@ -124,11 +139,36 @@ func (c Client) getRestToken(params *bullhorn.AuthParams, accessToken string) (*
 		return nil, err
 	}
 	var resp bullhorn.RestApiResponse
-	c.B.ParseResponse(cr.Data, &resp)
+	err = c.B.ParseResponse(cr.Data, &resp)
+	if err != nil {
+		return nil, err
+	}
 	return &resp, nil
 }
 
-// getClient Gets the authentication client
-func getClient() Client {
-	return Client{backend.Getbackend()}
+func Ping(apiUrl string, bhRestToken string) (int64, error) {
+	return getClient().Ping(apiUrl, bhRestToken)
+}
+
+// Ping Pings the bullhorn backend to check the status of a rest token
+//
+// Use this service to check the expiration time of your rest token
+func (c Client) Ping(apiUrl string, bhRestToken string) (int64, error) {
+	headers := make(map[string]string)
+	headers["ApiToken"] = bhRestToken
+
+	requestUrl := fmt.Sprintf("%s/ping", apiUrl)
+	_, cr, err := c.B.Call(requestUrl, "get", headers, nil, nil)
+	if err != nil {
+		return 0, err
+	}
+	if cr.Code >= 400 {
+		return 0, err
+	}
+	var pingResponse bullhorn.PingResponse
+	err = c.B.ParseResponse(cr.Data, &pingResponse)
+	if err != nil {
+		return 0, err
+	}
+	return pingResponse.SessionExpires, nil
 }

@@ -7,35 +7,35 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-var backend Client
+var backend Service
 
 func init() {
 	r := resty.New()
 	r.SetRedirectPolicy(resty.FlexibleRedirectPolicy(0))
-	backend = &BackendImplementation{
+	backend = &ServiceImplementation{
 		HTTPClient: r,
 	}
 }
 
-func Getbackend() Client {
+func GetBackendService() Service {
 	return backend
 }
 
 type ClientResponse struct {
-	Code string
+	Code int
 	Data interface{}
 }
 
-type Client interface {
+type Service interface {
 	Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error)
 	ParseResponse(data interface{}, response interface{}) error
 }
 
-type BackendImplementation struct {
+type ServiceImplementation struct {
 	HTTPClient *resty.Client
 }
 
-func (b BackendImplementation) Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error) {
+func (b ServiceImplementation) Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error) {
 	var response interface{}
 	req := b.HTTPClient.R().
 		SetHeaders(headers).
@@ -56,7 +56,7 @@ func (b BackendImplementation) Call(url string, method string, headers map[strin
 	case "patch":
 		resp, err = patch(url, req)
 	case "delete":
-		resp, err = delete(url, req)
+		resp, err = rdelete(url, req)
 	}
 
 	if err != nil {
@@ -68,12 +68,12 @@ func (b BackendImplementation) Call(url string, method string, headers map[strin
 	}
 
 	return resp, &ClientResponse{
-		Code: resp.Status(),
+		Code: resp.RawResponse.StatusCode,
 		Data: response,
 	}, err
 }
 
-func (b BackendImplementation) ParseResponse(data interface{}, response interface{}) error {
+func (b ServiceImplementation) ParseResponse(data interface{}, response interface{}) error {
 	jsonString, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func put(url string, r *resty.Request) (*resty.Response, error) {
 	return r.Put(url)
 }
 
-func delete(url string, r *resty.Request) (*resty.Response, error) {
+func rdelete(url string, r *resty.Request) (*resty.Response, error) {
 	return r.Delete(url)
 }
 
