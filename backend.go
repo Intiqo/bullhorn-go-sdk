@@ -1,4 +1,4 @@
-package backend
+package bullhorn
 
 import (
 	"encoding/json"
@@ -7,35 +7,30 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-var backend Service
-
-func init() {
-	r := resty.New()
-	r.SetRedirectPolicy(resty.FlexibleRedirectPolicy(0))
-	backend = &ServiceImplementation{
-		HTTPClient: r,
-	}
-}
-
-func GetBackendService() Service {
-	return backend
-}
-
 type ClientResponse struct {
 	Code int
 	Data interface{}
 }
 
-type Service interface {
+type Backend interface {
 	Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error)
 	ParseResponse(data interface{}, response interface{}) error
 }
 
-type ServiceImplementation struct {
+func NewBackend() Backend {
+	r := resty.New()
+	r.SetRedirectPolicy(resty.FlexibleRedirectPolicy(0))
+	backend := &restApiBackend{
+		HTTPClient: r,
+	}
+	return backend
+}
+
+type restApiBackend struct {
 	HTTPClient *resty.Client
 }
 
-func (b ServiceImplementation) Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error) {
+func (b restApiBackend) Call(url string, method string, headers map[string]string, query map[string]string, body interface{}) (*resty.Response, *ClientResponse, error) {
 	var response interface{}
 	req := b.HTTPClient.R().
 		SetHeaders(headers).
@@ -73,7 +68,7 @@ func (b ServiceImplementation) Call(url string, method string, headers map[strin
 	}, err
 }
 
-func (b ServiceImplementation) ParseResponse(data interface{}, response interface{}) error {
+func (b restApiBackend) ParseResponse(data interface{}, response interface{}) error {
 	jsonString, err := json.Marshal(data)
 	if err != nil {
 		return err
