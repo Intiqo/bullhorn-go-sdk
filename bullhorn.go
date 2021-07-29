@@ -1,6 +1,10 @@
 package bullhorn
 
-import "github.com/go-resty/resty/v2"
+import (
+	"fmt"
+
+	"github.com/go-resty/resty/v2"
+)
 
 type QueryOptions struct {
 	Fields       []string
@@ -16,7 +20,9 @@ type QueryOptions struct {
 
 type Client interface {
 	// Ping Pings bullhorn and gets the expiration time of the current api token
-	Ping() (int64, error)
+	//
+	// If the rest api token is invalid, you'll need to obtain a new rest token by using the GetNewRestToken method
+	Ping() error
 
 	// GetEntity Gets an entity
 	//
@@ -42,19 +48,30 @@ type Client interface {
 
 func NewClient(params *AuthParams) (Client, error) {
 	b := NewBackend()
-	tokenData, err := authenticate(b, params)
+	rr, tokenData, err := authenticate(b, params)
 	if err != nil {
+		fmt.Printf("authentication raw response: %v", rr)
 		return nil, err
 	}
 	c := &bullhornClient{
-		B:                 b,
+		B:            b,
+		ClientId:     params.ClientId,
+		ClientSecret: params.ClientSecret,
+		Username:     params.Username,
+		Password:     params.Password,
+
 		AuthenticationUrl: params.AuthenticationUrl,
 		LoginUrl:          params.LoginUrl,
 		ApiUrl:            tokenData.ApiUrl,
+
 		AuthorizationCode: tokenData.AuthorizationCode,
 		AccessToken:       tokenData.AccessToken,
 		RefreshToken:      tokenData.RefreshToken,
 		ApiToken:          tokenData.ApiToken,
+	}
+	err = c.Ping()
+	if err != nil {
+		return nil, err
 	}
 	return c, nil
 }

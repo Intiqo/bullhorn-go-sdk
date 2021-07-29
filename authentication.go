@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gofrs/uuid"
 )
 
@@ -20,10 +21,10 @@ type AuthParams struct {
 }
 
 type AccessTokenResponse struct {
-	AccessToken  string  `json:"access_token"`
-	RefreshToken string  `json:"refresh_token"`
-	TokenType    string  `json:"token_type"`
-	ExpiresIn    float64 `json:"expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
 type RestApiResponse struct {
@@ -38,22 +39,22 @@ type TokenResponse struct {
 }
 
 // authenticate Authenticates the client
-func authenticate(B Backend, params *AuthParams) (*TokenResponse, error) {
+func authenticate(B Backend, params *AuthParams) (*resty.Response, *TokenResponse, error) {
 	var authCode string
 	var err error
-	authCode, err = getAuthorizationCode(B, params)
+	rr, authCode, err := getAuthorizationCode(B, params)
 	if err != nil {
-		return nil, err
+		return rr, nil, err
 	}
-	authTokenData, err := getAccessAndRefreshTokenFromAuthCode(B, params, authCode)
+	rr, authTokenData, err := getAccessAndRefreshTokenFromAuthCode(B, params, authCode)
 	if err != nil {
-		return nil, err
+		return rr, nil, err
 	}
-	restApiData, err := getRestToken(B, params, authTokenData.AccessToken)
+	rr, restApiData, err := getRestToken(B, params, authTokenData.AccessToken)
 	if err != nil {
-		return nil, err
+		return rr, nil, err
 	}
-	return &TokenResponse{
+	return rr, &TokenResponse{
 		AuthorizationCode:   authCode,
 		AccessTokenResponse: *authTokenData,
 		RestApiResponse:     *restApiData,
@@ -63,7 +64,7 @@ func authenticate(B Backend, params *AuthParams) (*TokenResponse, error) {
 // getAccessAndRefreshToken Gets authorization code
 //
 // Extracts the code from the redirected URL sent by Bullhorn
-func getAuthorizationCode(B Backend, params *AuthParams) (string, error) {
+func getAuthorizationCode(B Backend, params *AuthParams) (*resty.Response, string, error) {
 	query := make(map[string]string)
 	query["response_type"] = "code"
 	query["action"] = "Login"
@@ -77,31 +78,31 @@ func getAuthorizationCode(B Backend, params *AuthParams) (string, error) {
 	requestUrl := fmt.Sprintf("%s/oauth/authorize", params.AuthenticationUrl)
 	rr, _, err := B.Call(requestUrl, "post", nil, query, nil)
 	if err != nil && !strings.Contains(err.Error(), "stopped after 0 redirects") {
-		return "", err
+		return rr, "", err
 	}
 	if rr == nil {
-		return "", errors.New("failed to parse raw response")
+		return rr, "", errors.New("failed to parse raw response")
 	}
 	location := rr.RawResponse.Header.Get("location")
 	if location == "" {
-		return "", errors.New("failed to get authorization code")
+		return rr, "", fmt.Errorf("failed to get location to parse authorization code with error")
 	}
 
 	parsedUrl, err := url.Parse(location)
 	if err != nil {
-		return "", errors.New("failed to get authorization code")
+		return rr, "", fmt.Errorf("failed to get authorization code with error: %s", err)
 	}
 
 	values, err := url.ParseQuery(parsedUrl.RawQuery)
 	if err != nil {
-		return "", errors.New("failed to get authorization code")
+		return rr, "", fmt.Errorf("failed to get authorization code with error: %s", err)
 	}
 	authCode := values.Get("code")
-	return authCode, nil
+	return rr, authCode, nil
 }
 
 // getAccessAndRefreshTokenFromAuthCode Gets the access and refresh tokens from authorization code
-func getAccessAndRefreshTokenFromAuthCode(B Backend, params *AuthParams, authCode string) (*AccessTokenResponse, error) {
+func getAccessAndRefreshTokenFromAuthCode(B Backend, params *AuthParams, authCode string) (*resty.Response, *AccessTokenResponse, error) {
 	query := make(map[string]string)
 	query["grant_type"] = "authorization_code"
 	query["code"] = authCode
@@ -109,20 +110,20 @@ func getAccessAndRefreshTokenFromAuthCode(B Backend, params *AuthParams, authCod
 	query["client_secret"] = params.ClientSecret
 
 	requestUrl := fmt.Sprintf("%s/oauth/token", params.AuthenticationUrl)
-	_, cr, err := B.Call(requestUrl, "post", nil, query, nil)
+	rr, cr, err := B.Call(requestUrl, "post", nil, query, nil)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get access / refresh tokens with error: %s", err)
 	}
 	var resp AccessTokenResponse
 	err = B.ParseResponse(cr.Data, &resp)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get access / refresh tokens with error: %s", err)
 	}
-	return &resp, nil
+	return rr, &resp, nil
 }
 
 // getNewAccessAndRefreshToken Gets new access and refresh tokens from existing refresh token
-func getNewAccessAndRefreshToken(B Backend, params *AuthParams, refreshToken string) (*AccessTokenResponse, error) {
+func getNewAccessAndRefreshToken(B Backend, params *AuthParams, refreshToken string) (*resty.Response, *AccessTokenResponse, error) {
 	query := make(map[string]string)
 	query["grant_type"] = "refresh_token"
 	query["refresh_token"] = refreshToken
@@ -130,33 +131,33 @@ func getNewAccessAndRefreshToken(B Backend, params *AuthParams, refreshToken str
 	query["client_secret"] = params.ClientSecret
 
 	requestUrl := fmt.Sprintf("%s/oauth/token", params.AuthenticationUrl)
-	_, cr, err := B.Call(requestUrl, "post", nil, query, nil)
+	rr, cr, err := B.Call(requestUrl, "post", nil, query, nil)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get new access / refresh tokens with error: %s", err)
 	}
 	var resp AccessTokenResponse
 	err = B.ParseResponse(cr.Data, &resp)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get new access / refresh tokens with error: %s", err)
 	}
-	return &resp, nil
+	return rr, &resp, nil
 }
 
 // getRestToken Gets the rest api token
-func getRestToken(B Backend, params *AuthParams, accessToken string) (*RestApiResponse, error) {
+func getRestToken(B Backend, params *AuthParams, accessToken string) (*resty.Response, *RestApiResponse, error) {
 	query := make(map[string]string)
 	query["access_token"] = accessToken
 	query["version"] = "2.0"
 
 	requestUrl := fmt.Sprintf("%s/rest-services/login", params.LoginUrl)
-	_, cr, err := B.Call(requestUrl, "post", nil, query, nil)
+	rr, cr, err := B.Call(requestUrl, "post", nil, query, nil)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get rest token with error: %s", err)
 	}
 	var resp RestApiResponse
 	err = B.ParseResponse(cr.Data, &resp)
 	if err != nil {
-		return nil, err
+		return rr, nil, fmt.Errorf("failed to get rest token with error: %s", err)
 	}
-	return &resp, nil
+	return rr, &resp, nil
 }

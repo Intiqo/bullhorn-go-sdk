@@ -3,6 +3,7 @@ package bullhorn
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -10,23 +11,29 @@ import (
 type bullhornClient struct {
 	B Backend
 
+	ClientId     string
+	ClientSecret string
+	Username     string
+	Password     string
+
 	AuthenticationUrl string
 	LoginUrl          string
 	ApiUrl            string
 
-	AuthorizationCode string
-	AccessToken       string
-	RefreshToken      string
-	ApiToken          string
+	AuthorizationCode  string
+	AccessToken        string
+	RefreshToken       string
+	ApiToken           string
+	ApiTokenExpiryTime int64
 }
 
-func (b bullhornClient) getHeaders() map[string]string {
+func (b *bullhornClient) getHeaders() map[string]string {
 	headers := make(map[string]string)
 	headers["BhRestToken"] = b.ApiToken
 	return headers
 }
 
-func (b bullhornClient) validateEntity(name string) error {
+func (b *bullhornClient) validateEntity(name string) error {
 	switch name {
 	case "Candidate":
 		return nil
@@ -46,7 +53,7 @@ func (b bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b bullhornClient) parseResponseForEntity(name string, data interface{}) (interface{}, error) {
+func (b *bullhornClient) parseResponseForEntity(name string, data interface{}) (interface{}, error) {
 	switch name {
 	case "Candidate":
 		var candidate Candidate
@@ -101,25 +108,36 @@ func (b bullhornClient) parseResponseForEntity(name string, data interface{}) (i
 	return nil, fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b bullhornClient) Ping() (int64, error) {
+func (b *bullhornClient) Ping() error {
 	requestUrl := fmt.Sprintf("%s/ping", b.ApiUrl)
-	_, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
 	if err != nil {
-		return 0, err
+		fmt.Printf("failed to ping bullhorn with error %s\n", err)
+		fmt.Printf("raw response -> %v", rr)
+		return err
 	}
 	if cr.Code >= 400 {
-		return 0, err
+		fmt.Printf("failed to ping bullhorn with error %s\n", err)
+		fmt.Printf("raw response -> %v", rr)
+		return err
 	}
 	var pingResponse Ping
 	err = b.B.ParseResponse(cr.Data, &pingResponse)
 	if err != nil {
-		return 0, err
+		fmt.Printf("failed to ping bullhorn with error %s\n", err)
+		fmt.Printf("raw response -> %v", rr)
+		return err
 	}
-	return pingResponse.SessionExpires, nil
+	b.ApiTokenExpiryTime = pingResponse.SessionExpires
+	return nil
 }
 
-func (b bullhornClient) GetEntity(name string, id int, options QueryOptions) (*resty.Response, interface{}, error) {
-	err := b.validateEntity(name)
+func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -139,8 +157,12 @@ func (b bullhornClient) GetEntity(name string, id int, options QueryOptions) (*r
 	return rr, responseData, nil
 }
 
-func (b bullhornClient) CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error) {
-	err := b.validateEntity(name)
+func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -157,8 +179,12 @@ func (b bullhornClient) CreateEntity(name string, data map[string]interface{}) (
 	return rr, &createResponse, nil
 }
 
-func (b bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error) {
-	err := b.validateEntity(name)
+func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -175,8 +201,12 @@ func (b bullhornClient) UpdateEntity(name string, id int, data map[string]interf
 	return rr, &updateResponse, nil
 }
 
-func (b bullhornClient) DeleteEntity(name string, id int) (*resty.Response, error) {
-	err := b.validateEntity(name)
+func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, err
+	}
+	err = b.validateEntity(name)
 	if err != nil {
 		return nil, err
 	}
@@ -186,4 +216,46 @@ func (b bullhornClient) DeleteEntity(name string, id int) (*resty.Response, erro
 		return rr, err
 	}
 	return rr, nil
+}
+
+func (b *bullhornClient) updateTokensForClient() error {
+	params := &AuthParams{
+		ClientId:          b.ClientId,
+		ClientSecret:      b.ClientSecret,
+		Username:          b.Username,
+		Password:          b.Password,
+		AuthenticationUrl: b.AuthenticationUrl,
+		LoginUrl:          b.LoginUrl,
+	}
+	rr, accessTokenResponse, err := getNewAccessAndRefreshToken(b.B, params, b.RefreshToken)
+	if err != nil {
+		rr, tokenResponse, err := authenticate(b.B, params)
+		if err != nil {
+			fmt.Printf("failed to authenticate user while updating tokens with error %s\n", err)
+			fmt.Printf("raw response -> %v", rr)
+		}
+		b.AuthorizationCode = tokenResponse.AuthorizationCode
+		b.AccessToken = tokenResponse.AccessToken
+		b.RefreshToken = tokenResponse.RefreshToken
+		b.ApiToken = tokenResponse.ApiToken
+		b.ApiUrl = tokenResponse.ApiUrl
+		return nil
+	}
+	rr, restApiResponse, err := getRestToken(b.B, params, accessTokenResponse.AccessToken)
+	if err != nil {
+		fmt.Printf("failed to get rest token while updating tokens with error %s\n", err)
+		fmt.Printf("raw response -> %v", rr)
+		return err
+	}
+	b.ApiToken = restApiResponse.ApiToken
+	b.ApiUrl = restApiResponse.ApiUrl
+	return nil
+}
+
+func (b *bullhornClient) checkAndUpdateTokens() error {
+	now := time.Now().Unix()
+	if b.ApiTokenExpiryTime <= now {
+		return b.updateTokensForClient()
+	}
+	return nil
 }
