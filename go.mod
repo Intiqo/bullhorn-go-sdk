@@ -1,6 +1,6 @@
-module github.com/adwitiyaio/bullhorn
+module github.com/adwitiyaio/bullhorn-go-sdk
 
-go 1.16
+go 1.17
 
 require (
 	github.com/go-resty/resty/v2 v2.6.0
