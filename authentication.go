@@ -18,6 +18,8 @@ type AuthParams struct {
 
 	AuthenticationUrl string
 	LoginUrl          string
+
+	RestTokenTTL string
 }
 
 type AccessTokenResponse struct {
@@ -28,8 +30,8 @@ type AccessTokenResponse struct {
 }
 
 type RestApiResponse struct {
-	ApiToken string `json:"BhRestToken"`
-	ApiUrl   string `json:"restUrl"`
+	RestToken string `json:"BhRestToken"`
+	ApiUrl    string `json:"restUrl"`
 }
 
 type TokenResponse struct {
@@ -148,6 +150,7 @@ func getRestToken(B Backend, params *AuthParams, accessToken string) (*resty.Res
 	query := make(map[string]string)
 	query["access_token"] = accessToken
 	query["version"] = "2.0"
+	query["ttl"] = params.RestTokenTTL
 
 	requestUrl := fmt.Sprintf("%s/rest-services/login", params.LoginUrl)
 	rr, cr, err := B.Call(requestUrl, "post", nil, query, nil)

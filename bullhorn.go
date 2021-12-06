@@ -19,30 +19,30 @@ type QueryOptions struct {
 }
 
 type Client interface {
-	// Ping Pings bullhorn and gets the expiration time of the current api token
+	// Ping ... Ping bullhorn and gets the expiration time of the current api token
 	//
 	// If the rest api token is invalid, you'll need to obtain a new rest token by using the GetNewRestToken method
 	Ping() error
 
-	// GetEntity Gets an entity
+	// GetEntity ... Get an entity
 	//
 	// Name should be one of Entity
 	GetEntity(name string, id int, options QueryOptions) (*resty.Response, interface{}, error)
-	// CreateEntity Creates a new entity
+	// CreateEntity Create a new entity
 	//
 	// Name should be one of Entity
 	//
 	// Data should be passed as a map of fields. As for the field names of each entity,
 	// see https://bullhorn.github.io/rest-api-docs/entityref.html
 	CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error)
-	// UpdateEntity Updates an existing entity
+	// UpdateEntity ... Update an existing entity
 	//
 	// Name should be one of Entity
 	//
 	// Data should be passed as a map of fields. As for the field names of each entity,
 	// see https://bullhorn.github.io/rest-api-docs/entityref.html
 	UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error)
-	// DeleteEntity Deletes an existing entity
+	// DeleteEntity ... Delete an existing entity
 	DeleteEntity(name string, id int) (*resty.Response, error)
 }
 
@@ -67,7 +67,7 @@ func NewClient(params *AuthParams) (Client, error) {
 		AuthorizationCode: tokenData.AuthorizationCode,
 		AccessToken:       tokenData.AccessToken,
 		RefreshToken:      tokenData.RefreshToken,
-		ApiToken:          tokenData.ApiToken,
+		RestToken:         tokenData.RestToken,
 	}
 	err = c.Ping()
 	if err != nil {

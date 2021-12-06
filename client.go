@@ -20,16 +20,16 @@ type bullhornClient struct {
 	LoginUrl          string
 	ApiUrl            string
 
-	AuthorizationCode  string
-	AccessToken        string
-	RefreshToken       string
-	ApiToken           string
-	ApiTokenExpiryTime int64
+	AuthorizationCode   string
+	AccessToken         string
+	RefreshToken        string
+	RestToken           string
+	RestTokenExpiryTime int64
 }
 
 func (b *bullhornClient) getHeaders() map[string]string {
 	headers := make(map[string]string)
-	headers["BhRestToken"] = b.ApiToken
+	headers["BhRestToken"] = b.RestToken
 	return headers
 }
 
@@ -128,7 +128,7 @@ func (b *bullhornClient) Ping() error {
 		fmt.Printf("raw response -> %v", rr)
 		return err
 	}
-	b.ApiTokenExpiryTime = pingResponse.SessionExpires
+	b.RestTokenExpiryTime = pingResponse.SessionExpires
 	return nil
 }
 
@@ -237,7 +237,7 @@ func (b *bullhornClient) updateTokensForClient() error {
 		b.AuthorizationCode = tokenResponse.AuthorizationCode
 		b.AccessToken = tokenResponse.AccessToken
 		b.RefreshToken = tokenResponse.RefreshToken
-		b.ApiToken = tokenResponse.ApiToken
+		b.RestToken = tokenResponse.RestToken
 		b.ApiUrl = tokenResponse.ApiUrl
 		return nil
 	}
@@ -247,14 +247,14 @@ func (b *bullhornClient) updateTokensForClient() error {
 		fmt.Printf("raw response -> %v", rr)
 		return err
 	}
-	b.ApiToken = restApiResponse.ApiToken
+	b.RestToken = restApiResponse.RestToken
 	b.ApiUrl = restApiResponse.ApiUrl
 	return nil
 }
 
 func (b *bullhornClient) checkAndUpdateTokens() error {
 	now := time.Now().Unix()
-	if b.ApiTokenExpiryTime <= now {
+	if b.RestTokenExpiryTime <= now {
 		return b.updateTokensForClient()
 	}
 	return nil

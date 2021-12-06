@@ -4,6 +4,8 @@ type Ping struct {
 	SessionExpires int64 `json:"sessionExpires"`
 }
 
+const CandidateEntity = "Candidate"
+
 type Candidate struct {
 	Id               int `json:"id"`
 	ActivePlacements struct {
@@ -374,6 +376,8 @@ type Candidate struct {
 	WorkPhone interface{} `json:"workPhone"`
 }
 
+const ClientCorporationEntity = "ClientCorporation"
+
 type ClientCorporation struct {
 	Id      int `json:"id"`
 	Address struct {
@@ -502,6 +506,8 @@ type ClientCorporation struct {
 	TwitterHandle interface{} `json:"twitterHandle"`
 	WorkWeekStart interface{} `json:"workWeekStart"`
 }
+
+const ClientContactEntity = "ClientContact"
 
 type ClientContact struct {
 	Id               int `json:"id"`
@@ -712,6 +718,8 @@ type ClientContact struct {
 	Username          string      `json:"username"`
 }
 
+const LocationEntity = "Location"
+
 type Location struct {
 	Id      int `json:"id"`
 	Address struct {
@@ -790,6 +798,8 @@ type Location struct {
 		Data  []interface{} `json:"data"`
 	} `json:"versions"`
 }
+
+const JobOrderEntity = "JobOrder"
 
 type JobOrder struct {
 	Id      int `json:"id"`
@@ -1045,6 +1055,8 @@ type JobOrder struct {
 	YearsRequired   int         `json:"yearsRequired"`
 }
 
+const JobSubmissionEntity = "JobSubmission"
+
 type JobSubmission struct {
 	Id           int `json:"id"`
 	Appointments struct {
@@ -1140,6 +1152,8 @@ type JobSubmission struct {
 		Data  []interface{} `json:"data"`
 	} `json:"tasks"`
 }
+
+const PlacementEntity = "Placement"
 
 type Placement struct {
 	Id           int `json:"id"`
