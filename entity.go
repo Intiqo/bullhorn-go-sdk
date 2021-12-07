@@ -1,5 +1,11 @@
 package bullhorn
 
+type Error struct {
+	Key     string `json:"errorMessageKey"`
+	Code    int    `json:"errorCode"`
+	Message string `json:"errorMessage"`
+}
+
 type Ping struct {
 	SessionExpires int64 `json:"sessionExpires"`
 }

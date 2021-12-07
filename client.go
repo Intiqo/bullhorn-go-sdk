@@ -1,6 +1,8 @@
 package bullhorn
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -145,9 +147,17 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 	params["fields"] = strings.Join(options.Fields[:], ",")
 
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
+	if len(options.Associations) > 0 {
+		requestUrl = fmt.Sprintf("%s/entity/%s/%d/%s", b.ApiUrl, name, id, strings.Join(options.Associations[:], ","))
+	}
 	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
 	if err != nil {
-		return rr, nil, err
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
 	responseData, err := b.parseResponseForEntity(name, dataMap["data"])
@@ -169,7 +179,12 @@ func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) 
 	requestUrl := fmt.Sprintf("%s/entity/%s", b.ApiUrl, name)
 	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), nil, data)
 	if err != nil {
-		return rr, nil, err
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
 	}
 	var createResponse CreateResponse
 	err = b.B.ParseResponse(cr.Data, &createResponse)
@@ -191,7 +206,12 @@ func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]inter
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
 	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, data)
 	if err != nil {
-		return rr, nil, err
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
 	}
 	var updateResponse UpdateResponse
 	err = b.B.ParseResponse(cr.Data, &updateResponse)
@@ -213,7 +233,12 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
 	rr, _, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, nil)
 	if err != nil {
-		return rr, err
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, errors.New(string(rr.Body()))
+		}
+		return rr, errors.New(bhErr.Message)
 	}
 	return rr, nil
 }
