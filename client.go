@@ -55,7 +55,16 @@ func (b *bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b *bullhornClient) parseResponseForEntity(name string, data interface{}) (interface{}, error) {
+func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, associations []string) (interface{},
+	error) {
+	if len(associations) > 0 {
+		var resp interface{}
+		err := b.B.ParseResponse(data, &resp)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
+	}
 	switch name {
 	case "Candidate":
 		var candidate Candidate
@@ -160,7 +169,7 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"])
+	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations)
 	if err != nil {
 		return rr, nil, err
 	}
