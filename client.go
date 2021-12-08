@@ -257,12 +257,28 @@ func (b *bullhornClient) QueryEntity(name string, query string, options QueryOpt
 	if err != nil {
 		return nil, nil, err
 	}
-	params := make(map[string]string)
-	params["fields"] = strings.Join(options.Fields[:], ",")
 
-	body := Query{Where: query}
+	count := 10
+	if options.Count != 0 {
+		count = options.Count
+	}
+	start := 0
+	if options.Start != 0 {
+		start = options.Start
+	}
+	body := Query{
+		Where: query,
+		Options: Options{
+			Fields: strings.Join(options.Fields[:], ","),
+			Count:  count,
+			Start:  start,
+		},
+	}
+	if options.OrderBy != "" {
+		body.Options.OrderBy = options.OrderBy
+	}
 	requestUrl := fmt.Sprintf("%s/query/%s", b.ApiUrl, name)
-	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), params, body)
+	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
 	if err != nil {
 		var bhErr Error
 		err := json.Unmarshal(rr.Body(), &bhErr)
@@ -293,10 +309,20 @@ func (b *bullhornClient) SearchEntity(name string, query string, options QueryOp
 	if options.Count != 0 {
 		count = options.Count
 	}
+	start := 0
+	if options.Start != 0 {
+		start = options.Start
+	}
 	body := Search{
-		Query:  query,
-		Fields: strings.Join(options.Fields[:], ","),
-		Count:  count,
+		Query: query,
+		Options: Options{
+			Fields: strings.Join(options.Fields[:], ","),
+			Count:  count,
+			Start:  start,
+		},
+	}
+	if options.OrderBy != "" {
+		body.Options.OrderBy = options.OrderBy
 	}
 	requestUrl := fmt.Sprintf("%s/search/%s", b.ApiUrl, name)
 	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)

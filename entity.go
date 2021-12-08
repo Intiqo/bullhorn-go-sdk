@@ -6,14 +6,21 @@ type Error struct {
 	Message string `json:"errorMessage"`
 }
 
+type Options struct {
+	Fields  string `json:"fields"`
+	Start   int    `json:"start"`
+	Count   int    `json:"count"`
+	OrderBy string `json:"orderBy"`
+}
+
 type Query struct {
 	Where string `json:"where"`
+	Options
 }
 
 type Search struct {
-	Query  string `json:"query"`
-	Fields string `json:"fields"`
-	Count  int    `json:"count"`
+	Query string `json:"query"`
+	Options
 }
 
 type Ping struct {
