@@ -6,6 +6,16 @@ type Error struct {
 	Message string `json:"errorMessage"`
 }
 
+type Query struct {
+	Where string `json:"where"`
+}
+
+type Search struct {
+	Query  string `json:"query"`
+	Fields string `json:"fields"`
+	Count  int    `json:"count"`
+}
+
 type Ping struct {
 	SessionExpires int64 `json:"sessionExpires"`
 }

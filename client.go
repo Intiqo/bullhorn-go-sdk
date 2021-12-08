@@ -55,7 +55,8 @@ func (b *bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, associations []string) (interface{},
+func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, associations []string,
+	isArray bool) (interface{},
 	error) {
 	if len(associations) > 0 {
 		var resp interface{}
@@ -68,53 +69,123 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 	switch name {
 	case "Candidate":
 		var candidate Candidate
-		err := b.B.ParseResponse(data, &candidate)
-		if err != nil {
-			return nil, err
+		var candidates []Candidate
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &candidates)
+			if err != nil {
+				return nil, err
+			}
+			return candidates, nil
+		} else {
+			err = b.B.ParseResponse(data, &candidate)
+			if err != nil {
+				return nil, err
+			}
+			return candidate, nil
 		}
-		return candidate, nil
 	case "ClientCorporation":
 		var clientCorporation ClientCorporation
-		err := b.B.ParseResponse(data, &clientCorporation)
-		if err != nil {
-			return nil, err
+		var clientCorporations []ClientCorporation
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &clientCorporations)
+			if err != nil {
+				return nil, err
+			}
+			return clientCorporations, nil
+		} else {
+			err = b.B.ParseResponse(data, &clientCorporation)
+			if err != nil {
+				return nil, err
+			}
+			return clientCorporation, nil
 		}
-		return clientCorporation, nil
 	case "ClientContact":
 		var clientContact ClientContact
-		err := b.B.ParseResponse(data, &clientContact)
-		if err != nil {
-			return nil, err
+		var clientContacts []ClientContact
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &clientContacts)
+			if err != nil {
+				return nil, err
+			}
+			return clientContacts, nil
+		} else {
+			err = b.B.ParseResponse(data, &clientContact)
+			if err != nil {
+				return nil, err
+			}
+			return clientContact, nil
 		}
-		return clientContact, nil
 	case "Location":
 		var location Location
-		err := b.B.ParseResponse(data, &location)
-		if err != nil {
-			return nil, err
+		var locations []Location
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &locations)
+			if err != nil {
+				return nil, err
+			}
+			return locations, nil
+		} else {
+			err = b.B.ParseResponse(data, &location)
+			if err != nil {
+				return nil, err
+			}
+			return location, nil
 		}
-		return location, nil
 	case "JobOrder":
 		var jobOrder JobOrder
-		err := b.B.ParseResponse(data, &jobOrder)
-		if err != nil {
-			return nil, err
+		var jobOrders []JobOrder
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &jobOrders)
+			if err != nil {
+				return nil, err
+			}
+			return jobOrders, nil
+		} else {
+			err = b.B.ParseResponse(data, &jobOrder)
+			if err != nil {
+				return nil, err
+			}
+			return jobOrder, nil
 		}
-		return jobOrder, nil
 	case "JobSubmission":
 		var jobSubmission JobSubmission
-		err := b.B.ParseResponse(data, &jobSubmission)
-		if err != nil {
-			return nil, err
+		var jobSubmissions []JobSubmission
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &jobSubmissions)
+			if err != nil {
+				return nil, err
+			}
+			return jobSubmissions, nil
+		} else {
+			err = b.B.ParseResponse(data, &jobSubmission)
+			if err != nil {
+				return nil, err
+			}
+			return jobSubmission, nil
 		}
-		return jobSubmission, nil
 	case "Placement":
 		var placement Placement
-		err := b.B.ParseResponse(data, &placement)
-		if err != nil {
-			return nil, err
+		var placements []Placement
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &placements)
+			if err != nil {
+				return nil, err
+			}
+			return placements, nil
+		} else {
+			err = b.B.ParseResponse(data, &placement)
+			if err != nil {
+				return nil, err
+			}
+			return placement, nil
 		}
-		return placement, nil
 	}
 	return nil, fmt.Errorf("unsupported entity %s", name)
 }
@@ -169,7 +240,76 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations)
+	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, false)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, responseData, nil
+}
+
+func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (*resty.Response, interface{},
+	error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	params := make(map[string]string)
+	params["fields"] = strings.Join(options.Fields[:], ",")
+
+	body := Query{Where: query}
+	requestUrl := fmt.Sprintf("%s/query/%s", b.ApiUrl, name)
+	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), params, body)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, responseData, nil
+}
+
+func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	count := 100
+	if options.Count != 0 {
+		count = options.Count
+	}
+	body := Search{
+		Query:  query,
+		Fields: strings.Join(options.Fields[:], ","),
+		Count:  count,
+	}
+	requestUrl := fmt.Sprintf("%s/search/%s", b.ApiUrl, name)
+	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
 	if err != nil {
 		return rr, nil, err
 	}
