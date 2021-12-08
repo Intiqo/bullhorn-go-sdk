@@ -37,19 +37,19 @@ func (b *bullhornClient) getHeaders() map[string]string {
 
 func (b *bullhornClient) validateEntity(name string) error {
 	switch name {
-	case "Candidate":
+	case CandidateEntity:
 		return nil
-	case "ClientCorporation":
+	case ClientCorporationEntity:
 		return nil
-	case "ClientContact":
+	case ClientContactEntity:
 		return nil
-	case "Location":
+	case LocationEntity:
 		return nil
-	case "JobOrder":
+	case JobOrderEntity:
 		return nil
-	case "JobSubmission":
+	case JobSubmissionEntity:
 		return nil
-	case "Placement":
+	case PlacementEntity:
 		return nil
 	}
 	return fmt.Errorf("unsupported entity %s", name)
@@ -67,7 +67,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 		return resp, nil
 	}
 	switch name {
-	case "Candidate":
+	case CandidateEntity:
 		var candidate Candidate
 		var candidates []Candidate
 		var err error
@@ -84,7 +84,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return candidate, nil
 		}
-	case "ClientCorporation":
+	case ClientCorporationEntity:
 		var clientCorporation ClientCorporation
 		var clientCorporations []ClientCorporation
 		var err error
@@ -101,7 +101,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return clientCorporation, nil
 		}
-	case "ClientContact":
+	case ClientContactEntity:
 		var clientContact ClientContact
 		var clientContacts []ClientContact
 		var err error
@@ -118,7 +118,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return clientContact, nil
 		}
-	case "Location":
+	case LocationEntity:
 		var location Location
 		var locations []Location
 		var err error
@@ -135,7 +135,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return location, nil
 		}
-	case "JobOrder":
+	case JobOrderEntity:
 		var jobOrder JobOrder
 		var jobOrders []JobOrder
 		var err error
@@ -152,7 +152,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return jobOrder, nil
 		}
-	case "JobSubmission":
+	case JobSubmissionEntity:
 		var jobSubmission JobSubmission
 		var jobSubmissions []JobSubmission
 		var err error
@@ -169,7 +169,7 @@ func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, a
 			}
 			return jobSubmission, nil
 		}
-	case "Placement":
+	case PlacementEntity:
 		var placement Placement
 		var placements []Placement
 		var err error
