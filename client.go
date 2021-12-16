@@ -240,10 +240,7 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, false)
-	if err != nil {
-		return rr, nil, err
-	}
+	responseData := dataMap["data"]
 	return rr, responseData, nil
 }
 
@@ -288,10 +285,7 @@ func (b *bullhornClient) QueryEntity(name string, query string, options QueryOpt
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
-	if err != nil {
-		return rr, nil, err
-	}
+	responseData := dataMap["data"]
 	return rr, responseData, nil
 }
 
@@ -335,10 +329,7 @@ func (b *bullhornClient) SearchEntity(name string, query string, options QueryOp
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
-	if err != nil {
-		return rr, nil, err
-	}
+	responseData := dataMap["data"]
 	return rr, responseData, nil
 }
 
