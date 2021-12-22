@@ -240,11 +240,11 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, false)
-	if err != nil {
-		return rr, nil, err
-	}
-	return rr, responseData, nil
+	//responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, false)
+	//if err != nil {
+	//	return rr, nil, err
+	//}
+	return rr, dataMap["data"], nil
 }
 
 func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (*resty.Response, interface{},
