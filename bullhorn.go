@@ -132,6 +132,10 @@ func authenticateAndInitialize(b Backend, params *AuthParams) (Client, error) {
 		fmt.Printf("authentication raw response: %v", rr)
 		return nil, err
 	}
+	params.ApiUrl = tokenData.ApiUrl
+	params.AuthorizationCode = tokenData.AuthorizationCode
+	params.RefreshToken = tokenData.RefreshToken
+	params.RestToken = tokenData.RestToken
 	c := &bullhornClient{
 		B:            b,
 		ClientId:     params.ClientId,
@@ -143,10 +147,10 @@ func authenticateAndInitialize(b Backend, params *AuthParams) (Client, error) {
 		LoginUrl:          params.LoginUrl,
 		ApiUrl:            tokenData.ApiUrl,
 
-		AuthorizationCode: tokenData.AuthorizationCode,
-		AccessToken:       tokenData.AccessToken,
-		RefreshToken:      tokenData.RefreshToken,
-		RestToken:         tokenData.RestToken,
+		AuthorizationCode: params.AuthorizationCode,
+		AccessToken:       params.AccessToken,
+		RefreshToken:      params.RefreshToken,
+		RestToken:         params.RestToken,
 	}
 	err = c.Ping()
 	if err != nil {
