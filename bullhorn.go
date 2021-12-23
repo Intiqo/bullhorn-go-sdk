@@ -133,6 +133,7 @@ func authenticateAndInitialize(b Backend, params *AuthParams) (Client, error) {
 		return nil, err
 	}
 	params.ApiUrl = tokenData.ApiUrl
+	params.AccessToken = tokenData.AccessToken
 	params.AuthorizationCode = tokenData.AuthorizationCode
 	params.RefreshToken = tokenData.RefreshToken
 	params.RestToken = tokenData.RestToken
