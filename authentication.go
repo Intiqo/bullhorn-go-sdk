@@ -18,8 +18,14 @@ type AuthParams struct {
 
 	AuthenticationUrl string
 	LoginUrl          string
+	ApiUrl            string
 
 	RestTokenTTL string
+
+	AuthorizationCode string
+	AccessToken       string
+	RefreshToken      string
+	RestToken         string
 }
 
 type AccessTokenResponse struct {

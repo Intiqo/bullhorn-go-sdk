@@ -6,6 +6,5 @@ type CreateResponse struct {
 }
 
 type UpdateResponse struct {
-	ChangedEntityId int    `json:"changedEntityId"`
-	ChangeType      string `json:"changeType"`
+	CreateResponse
 }

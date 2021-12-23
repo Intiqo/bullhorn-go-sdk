@@ -55,9 +55,8 @@ func (b *bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b *bullhornClient) parseResponseForEntity(name string, data interface{}, associations []string,
-	isArray bool) (interface{},
-	error) {
+func (b *bullhornClient) ParseResponseForEntity(name string, data interface{}, associations []string,
+	isArray bool) (interface{}, error) {
 	if len(associations) > 0 {
 		var resp interface{}
 		err := b.B.ParseResponse(data, &resp)
@@ -240,10 +239,6 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	//responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, false)
-	//if err != nil {
-	//	return rr, nil, err
-	//}
 	return rr, dataMap["data"], nil
 }
 
@@ -288,11 +283,7 @@ func (b *bullhornClient) QueryEntity(name string, query string, options QueryOpt
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
-	if err != nil {
-		return rr, nil, err
-	}
-	return rr, responseData, nil
+	return rr, dataMap["data"], nil
 }
 
 func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
@@ -335,11 +326,7 @@ func (b *bullhornClient) SearchEntity(name string, query string, options QueryOp
 		return rr, nil, errors.New(bhErr.Message)
 	}
 	dataMap := cr.Data.(map[string]interface{})
-	responseData, err := b.parseResponseForEntity(name, dataMap["data"], options.Associations, true)
-	if err != nil {
-		return rr, nil, err
-	}
-	return rr, responseData, nil
+	return rr, dataMap["data"], nil
 }
 
 func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error) {

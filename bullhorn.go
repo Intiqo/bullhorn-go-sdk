@@ -72,10 +72,61 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#delete-entity for more information
 	DeleteEntity(name string, id int) (*resty.Response, error)
+
+	// ParseResponseForEntity ... Parse response data into an entity struct
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// In case you have "associations" with a request, pass that here
+	// so that the response can be parsed into the associated entity
+	//
+	// In case the expected response is an array, pass the isArray as true to get the
+	// response data in a slice of entities
+	ParseResponseForEntity(name string, data interface{}, associations []string, isArray bool) (interface{}, error)
 }
 
 func NewClient(params *AuthParams) (Client, error) {
 	b := NewBackend()
+	// If the caller is already authenticated, we ping the server to validate the token, if not valid,
+	// we create a new token for the caller
+	if params.AuthorizationCode != "" && params.AccessToken != "" && params.RefreshToken != "" && params.
+		RestToken != "" && params.ApiUrl != "" {
+		c := &bullhornClient{
+			B:            b,
+			ClientId:     params.ClientId,
+			ClientSecret: params.ClientSecret,
+			Username:     params.Username,
+			Password:     params.Password,
+
+			AuthenticationUrl: params.AuthenticationUrl,
+			LoginUrl:          params.LoginUrl,
+			ApiUrl:            params.ApiUrl,
+
+			AuthorizationCode: params.AuthorizationCode,
+			AccessToken:       params.AccessToken,
+			RefreshToken:      params.RefreshToken,
+			RestToken:         params.RestToken,
+		}
+		err := c.Ping()
+		// If the ping fails, we establish the entire authentication process again
+		if err != nil {
+			c, err := authenticateAndInitialize(b, params)
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
+		}
+		return c, nil
+	}
+	// If the caller doesn't have any existing tokens, we create a new token for the caller
+	c, err := authenticateAndInitialize(b, params)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func authenticateAndInitialize(b Backend, params *AuthParams) (Client, error) {
 	rr, tokenData, err := authenticate(b, params)
 	if err != nil {
 		fmt.Printf("authentication raw response: %v", rr)
