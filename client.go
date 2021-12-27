@@ -393,7 +393,7 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 		return nil, err
 	}
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
-	rr, _, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, nil)
+	rr, _, err := b.B.Call(requestUrl, "delete", b.getHeaders(), nil, nil)
 	if err != nil {
 		var bhErr Error
 		err := json.Unmarshal(rr.Body(), &bhErr)
