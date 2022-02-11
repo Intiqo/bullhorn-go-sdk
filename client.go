@@ -26,6 +26,7 @@ type bullhornClient struct {
 	AccessToken         string
 	RefreshToken        string
 	RestToken           string
+	RestTokenTtl        string
 	RestTokenExpiryTime int64
 }
 
@@ -413,6 +414,7 @@ func (b *bullhornClient) updateTokensForClient() error {
 		Password:          b.Password,
 		AuthenticationUrl: b.AuthenticationUrl,
 		LoginUrl:          b.LoginUrl,
+		RestTokenTTL:      b.RestTokenTtl,
 	}
 	rr, accessTokenResponse, err := getNewAccessAndRefreshToken(b.B, params, b.RefreshToken)
 	if err != nil {
@@ -440,7 +442,7 @@ func (b *bullhornClient) updateTokensForClient() error {
 }
 
 func (b *bullhornClient) checkAndUpdateTokens() error {
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 	if b.RestTokenExpiryTime <= now {
 		return b.updateTokensForClient()
 	}

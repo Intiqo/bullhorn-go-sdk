@@ -152,6 +152,7 @@ func authenticateAndInitialize(b Backend, params *AuthParams) (Client, error) {
 		AccessToken:       params.AccessToken,
 		RefreshToken:      params.RefreshToken,
 		RestToken:         params.RestToken,
+		RestTokenTtl:      params.RestTokenTTL,
 	}
 	err = c.Ping()
 	if err != nil {
