@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gofrs/uuid"
 )
+
+const defaultTtlValue = "1440"
 
 type AuthParams struct {
 	ClientId     string
@@ -156,7 +159,21 @@ func getRestToken(B Backend, params *AuthParams, accessToken string) (*resty.Res
 	query := make(map[string]string)
 	query["access_token"] = accessToken
 	query["version"] = "2.0"
-	query["ttl"] = params.RestTokenTTL
+
+	var ttl string
+	if params.RestTokenTTL == "" {
+		fmt.Printf("the passed ttl parameter is empty, setting default value")
+		ttl = defaultTtlValue
+	} else {
+		_, err := strconv.Atoi(params.RestTokenTTL)
+		if err != nil {
+			fmt.Printf("the passed ttl parameter (%s) is not an integer, setting default value", params.RestTokenTTL)
+			ttl = defaultTtlValue
+		} else {
+			ttl = params.RestTokenTTL
+		}
+	}
+	query["ttl"] = ttl
 
 	requestUrl := fmt.Sprintf("%s/rest-services/login", params.LoginUrl)
 	rr, cr, err := B.Call(requestUrl, "post", nil, query, nil)
