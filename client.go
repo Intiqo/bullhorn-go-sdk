@@ -357,6 +357,33 @@ func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) 
 	return rr, &createResponse, nil
 }
 
+func (b *bullhornClient) AssociateEntities(name string, id int, association string, associationIds []string) (*resty.Response, *CreateResponse, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	requestUrl := fmt.Sprintf("%s/entity/%s/%d/%s/%s", b.ApiUrl, name, id, association, strings.Join(associationIds[:], ","))
+	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), nil, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	var createResponse CreateResponse
+	err = b.B.ParseResponse(cr.Data, &createResponse)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, &createResponse, nil
+}
+
 func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {

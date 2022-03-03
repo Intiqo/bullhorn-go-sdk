@@ -399,6 +399,50 @@ type Candidate struct {
 	WorkPhone interface{} `json:"workPhone"`
 }
 
+const CertificationEntity = "Certification"
+
+type Certification struct {
+	Id                  int         `json:"id"`
+	Name                string      `json:"name"`
+	Category            interface{} `json:"category"`
+	CertificationGroups struct {
+		Total int           `json:"total"`
+		Data  []interface{} `json:"data"`
+	} `json:"certificationGroups"`
+	CountryID              interface{} `json:"countryID"`
+	CustomDate1            interface{} `json:"customDate1"`
+	CustomDate2            interface{} `json:"customDate2"`
+	CustomDate3            interface{} `json:"customDate3"`
+	CustomFloat1           interface{} `json:"customFloat1"`
+	CustomFloat2           interface{} `json:"customFloat2"`
+	CustomFloat3           interface{} `json:"customFloat3"`
+	CustomInt1             interface{} `json:"customInt1"`
+	CustomInt2             interface{} `json:"customInt2"`
+	CustomInt3             interface{} `json:"customInt3"`
+	CustomText1            interface{} `json:"customText1"`
+	CustomText10           interface{} `json:"customText10"`
+	CustomText2            interface{} `json:"customText2"`
+	CustomText3            interface{} `json:"customText3"`
+	CustomText4            interface{} `json:"customText4"`
+	CustomText5            interface{} `json:"customText5"`
+	CustomText6            interface{} `json:"customText6"`
+	CustomText7            interface{} `json:"customText7"`
+	CustomText8            interface{} `json:"customText8"`
+	CustomText9            interface{} `json:"customText9"`
+	CustomTextBlock1       interface{} `json:"customTextBlock1"`
+	CustomTextBlock2       interface{} `json:"customTextBlock2"`
+	CustomTextBlock3       interface{} `json:"customTextBlock3"`
+	CustomTextBlock4       interface{} `json:"customTextBlock4"`
+	CustomTextBlock5       interface{} `json:"customTextBlock5"`
+	DateAdded              int64       `json:"dateAdded"`
+	DateLastModified       int64       `json:"dateLastModified"`
+	Description            interface{} `json:"description"`
+	ExpirationDateOptional bool        `json:"expirationDateOptional"`
+	MigrateGUID            interface{} `json:"migrateGUID"`
+	Specialty              interface{} `json:"specialty"`
+	State                  interface{} `json:"state"`
+}
+
 const ClientCorporationEntity = "ClientCorporation"
 
 type ClientCorporation struct {

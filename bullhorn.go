@@ -59,6 +59,15 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/entityref.html
 	CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error)
+	// AssociateEntities Associate entities
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// Association should be a valid Bullhorn Association name
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#put-entity for more information
+	//
+	AssociateEntities(name string, id int, association string, associationIds []string) (*resty.Response, *CreateResponse, error)
 	// UpdateEntity ... Update an existing entity
 	//
 	// Name should be a valid Bullhorn Entity name
