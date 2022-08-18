@@ -38,6 +38,10 @@ func (b *bullhornClient) getHeaders() map[string]string {
 
 func (b *bullhornClient) validateEntity(name string) error {
 	switch name {
+	case CountryEntity:
+		return nil
+	case StateEntity:
+		return nil
 	case CandidateEntity:
 		return nil
 	case ClientCorporationEntity:
@@ -56,8 +60,10 @@ func (b *bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
-func (b *bullhornClient) ParseResponseForEntity(name string, data interface{}, associations []string,
-	isArray bool) (interface{}, error) {
+func (b *bullhornClient) ParseResponseForEntity(
+	name string, data interface{}, associations []string,
+	isArray bool,
+) (interface{}, error) {
 	if len(associations) > 0 {
 		var resp interface{}
 		err := b.B.ParseResponse(data, &resp)
@@ -67,6 +73,40 @@ func (b *bullhornClient) ParseResponseForEntity(name string, data interface{}, a
 		return resp, nil
 	}
 	switch name {
+	case CountryEntity:
+		var country Country
+		var countries []Country
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &countries)
+			if err != nil {
+				return nil, err
+			}
+			return countries, nil
+		} else {
+			err = b.B.ParseResponse(data, &country)
+			if err != nil {
+				return nil, err
+			}
+			return country, nil
+		}
+	case StateEntity:
+		var state State
+		var states []State
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &states)
+			if err != nil {
+				return nil, err
+			}
+			return states, nil
+		} else {
+			err = b.B.ParseResponse(data, &state)
+			if err != nil {
+				return nil, err
+			}
+			return state, nil
+		}
 	case CandidateEntity:
 		var candidate Candidate
 		var candidates []Candidate
@@ -243,8 +283,10 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (*resty.Response, interface{},
-	error) {
+func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (
+	*resty.Response, interface{},
+	error,
+) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -287,7 +329,9 @@ func (b *bullhornClient) QueryEntity(name string, query string, options QueryOpt
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
+func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (
+	*resty.Response, interface{}, error,
+) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -330,7 +374,9 @@ func (b *bullhornClient) SearchEntity(name string, query string, options QueryOp
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error) {
+func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (
+	*resty.Response, *CreateResponse, error,
+) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -357,7 +403,9 @@ func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) 
 	return rr, &createResponse, nil
 }
 
-func (b *bullhornClient) AssociateEntities(name string, id int, association string, associationIds []string) (*resty.Response, *CreateResponse, error) {
+func (b *bullhornClient) AssociateEntities(
+	name string, id int, association string, associationIds []string,
+) (*resty.Response, *CreateResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -366,7 +414,9 @@ func (b *bullhornClient) AssociateEntities(name string, id int, association stri
 	if err != nil {
 		return nil, nil, err
 	}
-	requestUrl := fmt.Sprintf("%s/entity/%s/%d/%s/%s", b.ApiUrl, name, id, association, strings.Join(associationIds[:], ","))
+	requestUrl := fmt.Sprintf(
+		"%s/entity/%s/%d/%s/%s", b.ApiUrl, name, id, association, strings.Join(associationIds[:], ","),
+	)
 	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), nil, nil)
 	if err != nil {
 		var bhErr Error
@@ -384,7 +434,9 @@ func (b *bullhornClient) AssociateEntities(name string, id int, association stri
 	return rr, &createResponse, nil
 }
 
-func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error) {
+func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (
+	*resty.Response, *UpdateResponse, error,
+) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err

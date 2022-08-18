@@ -27,6 +27,24 @@ type Ping struct {
 	SessionExpires int64 `json:"sessionExpires"`
 }
 
+const CountryEntity = "Country"
+
+type Country struct {
+	ID     int    `json:"id"`
+	Code   string `json:"code"`
+	Name   string `json:"name"`
+	States []int  `json:"states"`
+}
+
+const StateEntity = "State"
+
+type State struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Code    string `json:"code"`
+	Country int    `json:"country"`
+}
+
 const CandidateEntity = "Candidate"
 
 type Candidate struct {
