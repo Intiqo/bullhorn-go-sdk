@@ -81,7 +81,20 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#delete-entity for more information
 	DeleteEntity(name string, id int) (*resty.Response, error)
-
+	// SubscribeToEvent ... Subscribe to an event
+	//
+	// Subscription ID must be a unique ID specific to a subscription
+	//
+	// Event Types can be any / all of "INSERTED", "UPDATED" or "DELETED"
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#put-event-subscription for more information
+	SubscribeToEvent(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error)
+	// FetchEvents ... Fetch all the latest events for a specific subscription
+	//
+	// Size indicates the number of events you'd like to receive in one go
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#get-event-subscription for more information
+	FetchEvents(subscriptionId string, size uint64) (*resty.Response, *FetchEventResponse, error)
 	// ParseResponseForEntity ... Parse response data into an entity struct
 	//
 	// Name should be a valid Bullhorn Entity name

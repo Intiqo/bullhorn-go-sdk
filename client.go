@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -483,6 +484,77 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 		return rr, errors.New(bhErr.Message)
 	}
 	return rr, nil
+}
+
+func (b *bullhornClient) SubscribeToEvent(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, ent := range entities {
+		err = b.validateEntity(ent)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	for _, et := range eventTypes {
+		switch et {
+		case "INSERTED":
+			fallthrough
+		case "UPDATED":
+			fallthrough
+		case "DELETED":
+			break
+		default:
+			return nil, nil, fmt.Errorf("unsupported event type %s", et)
+		}
+	}
+	params := make(map[string]string)
+	params["type"] = "entity"
+	params["names"] = strings.Join(entities, ",")
+	params["eventTypes"] = strings.Join(eventTypes, ",")
+	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
+	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), params, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	var subscribeResponse SubscribeEventResponse
+	err = b.B.ParseResponse(cr.Data, &subscribeResponse)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, &subscribeResponse, nil
+}
+
+func (b *bullhornClient) FetchEvents(subscriptionId string, size uint64) (*resty.Response, *FetchEventResponse, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	params := make(map[string]string)
+	params["maxEvents"] = strconv.FormatUint(size, 10)
+
+	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	var fetchEventResponse FetchEventResponse
+	err = b.B.ParseResponse(cr.Data, &fetchEventResponse)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, &fetchEventResponse, nil
 }
 
 func (b *bullhornClient) updateTokensForClient() error {

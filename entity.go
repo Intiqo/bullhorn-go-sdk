@@ -1570,3 +1570,27 @@ type Placement struct {
 	WorkWeekStart           interface{} `json:"workWeekStart"`
 	WorkersCompensationRate interface{} `json:"workersCompensationRate"`
 }
+
+type SubscribeEventResponse struct {
+	LastRequestId  int    `json:"lastRequestId"`
+	SubscriptionId string `json:"subscriptionId"`
+	CreatedOn      int64  `json:"createdOn"`
+	JmsSelector    string `json:"jmsSelector"`
+}
+
+type FetchEventResponse struct {
+	RequestId int `json:"requestId"`
+	Events    []struct {
+		EventId        string `json:"eventId"`
+		EventType      string `json:"eventType"`
+		EventTimestamp int64  `json:"eventTimestamp"`
+		EventMetadata  struct {
+			PersonId      string `json:"PERSON_ID"`
+			TransactionId string `json:"TRANSACTION_ID"`
+		} `json:"eventMetadata"`
+		EntityName        string   `json:"entityName"`
+		EntityId          int      `json:"entityId"`
+		EntityEventType   string   `json:"entityEventType"`
+		UpdatedProperties []string `json:"updatedProperties"`
+	} `json:"events"`
+}
