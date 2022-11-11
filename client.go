@@ -61,6 +61,19 @@ func (b *bullhornClient) validateEntity(name string) error {
 	return fmt.Errorf("unsupported entity %s", name)
 }
 
+func (b *bullhornClient) validateEventTypes(et string) error {
+	switch et {
+	case "INSERTED":
+		fallthrough
+	case "UPDATED":
+		fallthrough
+	case "DELETED":
+		return nil
+	default:
+		return fmt.Errorf("unsupported event type %s", et)
+	}
+}
+
 func (b *bullhornClient) ParseResponseForEntity(
 	name string, data interface{}, associations []string,
 	isArray bool,
@@ -486,7 +499,7 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 	return rr, nil
 }
 
-func (b *bullhornClient) SubscribeToEvent(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error) {
+func (b *bullhornClient) SubscribeToEvents(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -498,15 +511,9 @@ func (b *bullhornClient) SubscribeToEvent(subscriptionId string, entities []stri
 		}
 	}
 	for _, et := range eventTypes {
-		switch et {
-		case "INSERTED":
-			fallthrough
-		case "UPDATED":
-			fallthrough
-		case "DELETED":
-			break
-		default:
-			return nil, nil, fmt.Errorf("unsupported event type %s", et)
+		err = b.validateEventTypes(et)
+		if err != nil {
+			return nil, nil, err
 		}
 	}
 	params := make(map[string]string)
@@ -529,6 +536,34 @@ func (b *bullhornClient) SubscribeToEvent(subscriptionId string, entities []stri
 		return rr, nil, err
 	}
 	return rr, &subscribeResponse, nil
+}
+
+func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (*resty.Response, *UnsubscribeEventResponse, error) {
+	var err error
+	for _, et := range eventTypes {
+		err = b.validateEventTypes(et)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	params := make(map[string]string)
+	params["eventTypes"] = strings.Join(eventTypes, ",")
+	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
+	rr, cr, err := b.B.Call(requestUrl, "delete", b.getHeaders(), params, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	var unsubscribeEventResponse UnsubscribeEventResponse
+	err = b.B.ParseResponse(cr.Data, &unsubscribeEventResponse)
+	if err != nil {
+		return rr, nil, err
+	}
+	return rr, &unsubscribeEventResponse, nil
 }
 
 func (b *bullhornClient) FetchEvents(subscriptionId string, size uint64) (*resty.Response, *FetchEventResponse, error) {

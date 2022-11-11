@@ -1578,6 +1578,10 @@ type SubscribeEventResponse struct {
 	JmsSelector    string `json:"jmsSelector"`
 }
 
+type UnsubscribeEventResponse struct {
+	Result bool `json:"result"`
+}
+
 type FetchEventResponse struct {
 	RequestId int `json:"requestId"`
 	Events    []struct {
