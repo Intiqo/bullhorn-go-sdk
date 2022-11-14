@@ -592,6 +592,84 @@ type ClientCorporation struct {
 	WorkWeekStart interface{} `json:"workWeekStart"`
 }
 
+const CandidateCertificationEntity = "CandidateCertification"
+
+type CandidateCertification struct {
+	BoardCertification interface{} `json:"boardCertification"`
+	Candidate          struct {
+		FirstName string `json:"firstName"`
+		Id        int    `json:"id"`
+		LastName  string `json:"lastName"`
+	} `json:"candidate"`
+	Certification struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"certification"`
+	CertificationFileAttachments struct {
+		Data  []interface{} `json:"data"`
+		Total int           `json:"total"`
+	} `json:"certificationFileAttachments"`
+	Comments               interface{} `json:"comments"`
+	Compact                interface{} `json:"compact"`
+	CopyOnFile             interface{} `json:"copyOnFile"`
+	CustomDate1            interface{} `json:"customDate1"`
+	CustomDate10           interface{} `json:"customDate10"`
+	CustomDate2            interface{} `json:"customDate2"`
+	CustomDate3            interface{} `json:"customDate3"`
+	CustomDate4            interface{} `json:"customDate4"`
+	CustomDate5            interface{} `json:"customDate5"`
+	CustomDate6            interface{} `json:"customDate6"`
+	CustomDate7            interface{} `json:"customDate7"`
+	CustomDate8            interface{} `json:"customDate8"`
+	CustomDate9            interface{} `json:"customDate9"`
+	CustomText1            interface{} `json:"customText1"`
+	CustomText10           interface{} `json:"customText10"`
+	CustomText2            interface{} `json:"customText2"`
+	CustomText3            interface{} `json:"customText3"`
+	CustomText4            interface{} `json:"customText4"`
+	CustomText5            interface{} `json:"customText5"`
+	CustomText6            interface{} `json:"customText6"`
+	CustomText7            interface{} `json:"customText7"`
+	CustomText8            interface{} `json:"customText8"`
+	CustomText9            interface{} `json:"customText9"`
+	CustomTextBlock1       interface{} `json:"customTextBlock1"`
+	CustomTextBlock10      interface{} `json:"customTextBlock10"`
+	CustomTextBlock2       interface{} `json:"customTextBlock2"`
+	CustomTextBlock3       interface{} `json:"customTextBlock3"`
+	CustomTextBlock4       interface{} `json:"customTextBlock4"`
+	CustomTextBlock5       interface{} `json:"customTextBlock5"`
+	CustomTextBlock6       interface{} `json:"customTextBlock6"`
+	CustomTextBlock7       interface{} `json:"customTextBlock7"`
+	CustomTextBlock8       interface{} `json:"customTextBlock8"`
+	CustomTextBlock9       interface{} `json:"customTextBlock9"`
+	DateAdded              int64       `json:"dateAdded"`
+	DateCertified          interface{} `json:"dateCertified"`
+	DateExpiration         int64       `json:"dateExpiration"`
+	DateLastModified       int64       `json:"dateLastModified"`
+	DisplayStatus          string      `json:"displayStatus"`
+	ExpirationReminderDate interface{} `json:"expirationReminderDate"`
+	FileAttachments        struct {
+		Data  []interface{} `json:"data"`
+		Total int           `json:"total"`
+	} `json:"fileAttachments"`
+	Id            int         `json:"id"`
+	IsComplete    bool        `json:"isComplete"`
+	IsDeleted     bool        `json:"isDeleted"`
+	IssuedBy      string      `json:"issuedBy"`
+	LicenseNumber string      `json:"licenseNumber"`
+	LicenseType   interface{} `json:"licenseType"`
+	Location      interface{} `json:"location"`
+	MigrateGUID   interface{} `json:"migrateGUID"`
+	ModifyingUser struct {
+		FirstName string `json:"firstName"`
+		Id        int    `json:"id"`
+		LastName  string `json:"lastName"`
+	} `json:"modifyingUser"`
+	Name    string      `json:"name"`
+	Results interface{} `json:"results"`
+	Status  string      `json:"status"`
+}
+
 const ClientContactEntity = "ClientContact"
 
 type ClientContact struct {

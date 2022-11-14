@@ -45,6 +45,8 @@ func (b *bullhornClient) validateEntity(name string) error {
 		return nil
 	case CandidateEntity:
 		return nil
+	case CandidateCertificationEntity:
+		return nil
 	case ClientCorporationEntity:
 		return nil
 	case ClientContactEntity:
@@ -137,6 +139,23 @@ func (b *bullhornClient) ParseResponseForEntity(
 				return nil, err
 			}
 			return candidate, nil
+		}
+	case CandidateCertificationEntity:
+		var candidateCertification CandidateCertification
+		var candidateCertifications []CandidateCertification
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &candidateCertifications)
+			if err != nil {
+				return nil, err
+			}
+			return candidateCertifications, nil
+		} else {
+			err = b.B.ParseResponse(data, &candidateCertification)
+			if err != nil {
+				return nil, err
+			}
+			return candidateCertification, nil
 		}
 	case ClientCorporationEntity:
 		var clientCorporation ClientCorporation
