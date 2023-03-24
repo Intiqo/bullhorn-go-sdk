@@ -518,7 +518,9 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 	return rr, nil
 }
 
-func (b *bullhornClient) SubscribeToEvents(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error) {
+func (b *bullhornClient) SubscribeToEvents(
+	subscriptionId string, entities []string, eventTypes []string,
+) (*resty.Response, *SubscribeEventResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -557,7 +559,9 @@ func (b *bullhornClient) SubscribeToEvents(subscriptionId string, entities []str
 	return rr, &subscribeResponse, nil
 }
 
-func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (*resty.Response, *UnsubscribeEventResponse, error) {
+func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (
+	*resty.Response, *UnsubscribeEventResponse, error,
+) {
 	var err error
 	for _, et := range eventTypes {
 		err = b.validateEventTypes(et)
@@ -652,4 +656,54 @@ func (b *bullhornClient) checkAndUpdateTokens() error {
 		return b.updateTokensForClient()
 	}
 	return nil
+}
+
+func (b *bullhornClient) GetEntityFileAttachments(entity string, entityId int, options QueryOptions) (
+	*resty.Response, interface{}, error,
+) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(entity)
+	if err != nil {
+		return nil, nil, err
+	}
+	params := make(map[string]string)
+	params["fields"] = strings.Join(options.Fields[:], ",")
+
+	requestUrl := fmt.Sprintf("%s/entity/%s/%d/fileAttachments", b.ApiUrl, entity, entityId)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	return rr, dataMap["data"], nil
+}
+
+func (b *bullhornClient) GetEntityFile(entity string, entityId int, fileId int) (
+	*resty.Response, interface{}, error,
+) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	requestUrl := fmt.Sprintf("%s/file/%s/%d/%d", b.ApiUrl, entity, entityId, fileId)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
+	if err != nil {
+		var bhErr Error
+		err := json.Unmarshal(rr.Body(), &bhErr)
+		if err != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, errors.New(bhErr.Message)
+	}
+	data := cr.Data.(map[string]interface{})
+	return rr, data, nil
 }
