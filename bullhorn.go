@@ -67,7 +67,9 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#put-entity for more information
 	//
-	AssociateEntities(name string, id int, association string, associationIds []string) (*resty.Response, *CreateResponse, error)
+	AssociateEntities(name string, id int, association string, associationIds []string) (
+		*resty.Response, *CreateResponse, error,
+	)
 	// UpdateEntity ... Update an existing entity
 	//
 	// Name should be a valid Bullhorn Entity name
@@ -88,19 +90,35 @@ type Client interface {
 	// Event Types can be any / all of "INSERTED", "UPDATED" or "DELETED"
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#put-event-subscription for more information
-	SubscribeToEvents(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error)
+	SubscribeToEvents(subscriptionId string, entities []string, eventTypes []string) (
+		*resty.Response, *SubscribeEventResponse, error,
+	)
 	// UnsubscribeFromEvents ... Unsubscribe from events
 	//
 	// Subscription ID must be a unique ID specific to a subscription
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#delete-event-subscription for more information
-	UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (*resty.Response, *UnsubscribeEventResponse, error)
+	UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (
+		*resty.Response, *UnsubscribeEventResponse, error,
+	)
 	// FetchEvents ... Fetch all the latest events for a specific subscription
 	//
 	// Size indicates the number of events you'd like to receive in one go
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-event-subscription for more information
 	FetchEvents(subscriptionId string, size uint64) (*resty.Response, *FetchEventResponse, error)
+	// GetAttachmentsForEntity ... Get attachments for an entity
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#get-entity-entitytype-entityid-fileattachments for more information
+	GetAttachmentsForEntity(name string, entityId int, options QueryOptions) (*resty.Response, interface{}, error)
+	// GetFileForEntity ... Get file details for an entity
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#get-my-entity-s for more information
+	GetFileForEntity(name string, entityId int, fileId int) (*resty.Response, interface{}, error)
 	// ParseResponseForEntity ... Parse response data into an entity struct
 	//
 	// Name should be a valid Bullhorn Entity name
