@@ -7,4 +7,4 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 )
 
-require golang.org/x/net v0.0.0-20211205041911-012df41ee64c // indirect
+require golang.org/x/net v0.7.0 // indirect
