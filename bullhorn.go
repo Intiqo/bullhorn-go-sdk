@@ -107,18 +107,18 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-event-subscription for more information
 	FetchEvents(subscriptionId string, size uint64) (*resty.Response, *FetchEventResponse, error)
-	// GetEntityFileAttachments ... Get an entity's file attachments
+	// GetAttachmentsForEntity ... Get attachments for an entity
 	//
-	// Entity should be a valid Bullhorn Entity name
+	// Name should be a valid Bullhorn Entity name
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-entity-entitytype-entityid-fileattachments for more information
-	GetEntityFileAttachments(entity string, entityId int, options QueryOptions) (*resty.Response, interface{}, error)
-	// GetEntityFile ... Get an entity's file
+	GetAttachmentsForEntity(name string, entityId int, options QueryOptions) (*resty.Response, interface{}, error)
+	// GetFileForEntity ... Get file details for an entity
 	//
-	// Entity should be a valid Bullhorn Entity name
+	// Name should be a valid Bullhorn Entity name
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-my-entity-s for more information
-	GetEntityFile(entity string, entityId int, fileId int) (*resty.Response, interface{}, error)
+	GetFileForEntity(name string, entityId int, fileId int) (*resty.Response, interface{}, error)
 	// ParseResponseForEntity ... Parse response data into an entity struct
 	//
 	// Name should be a valid Bullhorn Entity name

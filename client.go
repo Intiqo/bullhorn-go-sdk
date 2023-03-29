@@ -658,7 +658,7 @@ func (b *bullhornClient) checkAndUpdateTokens() error {
 	return nil
 }
 
-func (b *bullhornClient) GetEntityFileAttachments(entity string, entityId int, options QueryOptions) (
+func (b *bullhornClient) GetAttachmentsForEntity(entity string, entityId int, options QueryOptions) (
 	*resty.Response, interface{}, error,
 ) {
 	err := b.checkAndUpdateTokens()
@@ -686,7 +686,7 @@ func (b *bullhornClient) GetEntityFileAttachments(entity string, entityId int, o
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) GetEntityFile(entity string, entityId int, fileId int) (
+func (b *bullhornClient) GetFileForEntity(entity string, entityId int, fileId int) (
 	*resty.Response, interface{}, error,
 ) {
 	err := b.checkAndUpdateTokens()
