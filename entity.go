@@ -1652,49 +1652,45 @@ type Placement struct {
 const FileAttachmentEntity = "FileAttachment"
 
 type FileAttachment struct {
-	Start int `json:"start"`
-	Count int `json:"count"`
-	Data  []struct {
-		Id        int `json:"id"`
-		Candidate struct {
-			Id        int    `json:"id"`
-			FirstName string `json:"firstName"`
-			LastName  string `json:"lastName"`
-		} `json:"candidate"`
-		ContentSubType        string `json:"contentSubType"`
-		ContentType           string `json:"contentType"`
-		DateAdded             int64  `json:"dateAdded"`
-		DepartmentsSharedWith struct {
-			Total int           `json:"total"`
-			Data  []interface{} `json:"data"`
-		} `json:"departmentsSharedWith"`
-		Description   *string `json:"description"`
-		Directory     string  `json:"directory"`
-		Distribution  string  `json:"distribution"`
-		ExternalID    string  `json:"externalID"`
-		FileExtension string  `json:"fileExtension"`
-		FileOwner     struct {
-			Id        int    `json:"id"`
-			FirstName string `json:"firstName"`
-			LastName  string `json:"lastName"`
-		} `json:"fileOwner"`
-		FileSize        int     `json:"fileSize"`
-		FileType        string  `json:"fileType"`
-		IsCopied        bool    `json:"isCopied"`
-		IsDeleted       bool    `json:"isDeleted"`
-		IsEncrypted     bool    `json:"isEncrypted"`
-		IsExternal      bool    `json:"isExternal"`
-		IsOpen          bool    `json:"isOpen"`
-		IsPrivate       bool    `json:"isPrivate"`
-		IsSendOut       bool    `json:"isSendOut"`
-		Name            string  `json:"name"`
-		Type            *string `json:"type"`
-		UsersSharedWith struct {
-			Total int           `json:"total"`
-			Data  []interface{} `json:"data"`
-		} `json:"usersSharedWith"`
-		Uuid string `json:"uuid"`
-	} `json:"data"`
+	Id        int `json:"id"`
+	Candidate struct {
+		Id        int    `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+	} `json:"candidate"`
+	ContentSubType        string `json:"contentSubType"`
+	ContentType           string `json:"contentType"`
+	DateAdded             int64  `json:"dateAdded"`
+	DepartmentsSharedWith struct {
+		Total int           `json:"total"`
+		Data  []interface{} `json:"data"`
+	} `json:"departmentsSharedWith"`
+	Description   *string `json:"description"`
+	Directory     string  `json:"directory"`
+	Distribution  string  `json:"distribution"`
+	ExternalID    string  `json:"externalID"`
+	FileExtension string  `json:"fileExtension"`
+	FileOwner     struct {
+		Id        int    `json:"id"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+	} `json:"fileOwner"`
+	FileSize        int     `json:"fileSize"`
+	FileType        string  `json:"fileType"`
+	IsCopied        bool    `json:"isCopied"`
+	IsDeleted       bool    `json:"isDeleted"`
+	IsEncrypted     bool    `json:"isEncrypted"`
+	IsExternal      bool    `json:"isExternal"`
+	IsOpen          bool    `json:"isOpen"`
+	IsPrivate       bool    `json:"isPrivate"`
+	IsSendOut       bool    `json:"isSendOut"`
+	Name            string  `json:"name"`
+	Type            *string `json:"type"`
+	UsersSharedWith struct {
+		Total int           `json:"total"`
+		Data  []interface{} `json:"data"`
+	} `json:"usersSharedWith"`
+	Uuid string `json:"uuid"`
 }
 
 const FileEntity = "File"
