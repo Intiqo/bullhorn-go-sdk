@@ -688,6 +688,7 @@ func (b *bullhornClient) updateTokensForClient() error {
 		if err != nil {
 			fmt.Printf("failed to authenticate user while updating tokens with error %s\n", err)
 			fmt.Printf("raw response -> %v", rr)
+			return err
 		}
 		b.AuthorizationCode = tokenResponse.AuthorizationCode
 		b.AccessToken = tokenResponse.AccessToken
