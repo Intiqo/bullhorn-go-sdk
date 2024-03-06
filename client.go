@@ -82,10 +82,7 @@ func (b *bullhornClient) validateEventTypes(et string) error {
 	}
 }
 
-func (b *bullhornClient) ParseResponseForEntity(
-	name string, data interface{}, associations []string,
-	isArray bool,
-) (interface{}, error) {
+func (b *bullhornClient) ParseResponseForEntity(name string, data interface{}, associations []string, isArray bool) (interface{}, error) {
 	if len(associations) > 0 {
 		var resp interface{}
 		err := b.B.ParseResponse(data, &resp)
@@ -361,22 +358,26 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 		requestUrl = fmt.Sprintf("%s/entity/%s/%d/%s", b.ApiUrl, name, id, strings.Join(options.Associations[:], ","))
 	}
 	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	dataMap := cr.Data.(map[string]interface{})
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (
-	*resty.Response, interface{},
-	error,
-) {
+func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -407,21 +408,26 @@ func (b *bullhornClient) QueryEntity(name string, query string, options QueryOpt
 	}
 	requestUrl := fmt.Sprintf("%s/query/%s", b.ApiUrl, name)
 	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	dataMap := cr.Data.(map[string]interface{})
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (
-	*resty.Response, interface{}, error,
-) {
+func (b *bullhornClient) SearchEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -452,21 +458,26 @@ func (b *bullhornClient) SearchEntity(name string, query string, options QueryOp
 	}
 	requestUrl := fmt.Sprintf("%s/search/%s", b.ApiUrl, name)
 	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "post", b.getHeaders(), nil, body)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	dataMap := cr.Data.(map[string]interface{})
 	return rr, dataMap["data"], nil
 }
 
-func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (
-	*resty.Response, *CreateResponse, error,
-) {
+func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) (*resty.Response, *CreateResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -477,13 +488,20 @@ func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) 
 	}
 	requestUrl := fmt.Sprintf("%s/entity/%s", b.ApiUrl, name)
 	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), nil, data)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "put", b.getHeaders(), nil, data)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var createResponse CreateResponse
 	err = b.B.ParseResponse(cr.Data, &createResponse)
@@ -493,9 +511,7 @@ func (b *bullhornClient) CreateEntity(name string, data map[string]interface{}) 
 	return rr, &createResponse, nil
 }
 
-func (b *bullhornClient) AssociateEntities(
-	name string, id int, association string, associationIds []string,
-) (*resty.Response, *CreateResponse, error) {
+func (b *bullhornClient) AssociateEntities(name string, id int, association string, associationIds []string) (*resty.Response, *CreateResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -508,13 +524,20 @@ func (b *bullhornClient) AssociateEntities(
 		"%s/entity/%s/%d/%s/%s", b.ApiUrl, name, id, association, strings.Join(associationIds[:], ","),
 	)
 	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), nil, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "put", b.getHeaders(), nil, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var createResponse CreateResponse
 	err = b.B.ParseResponse(cr.Data, &createResponse)
@@ -524,9 +547,7 @@ func (b *bullhornClient) AssociateEntities(
 	return rr, &createResponse, nil
 }
 
-func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (
-	*resty.Response, *UpdateResponse, error,
-) {
+func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]interface{}) (*resty.Response, *UpdateResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -537,13 +558,20 @@ func (b *bullhornClient) UpdateEntity(name string, id int, data map[string]inter
 	}
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
 	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, data)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "post", b.getHeaders(), nil, data)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var updateResponse UpdateResponse
 	err = b.B.ParseResponse(cr.Data, &updateResponse)
@@ -564,20 +592,25 @@ func (b *bullhornClient) DeleteEntity(name string, id int) (*resty.Response, err
 	}
 	requestUrl := fmt.Sprintf("%s/entity/%s/%d", b.ApiUrl, name, id)
 	rr, _, err := b.B.Call(requestUrl, "delete", b.getHeaders(), nil, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, err
+		}
+		rr, _, err = b.B.Call(requestUrl, "delete", b.getHeaders(), nil, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, errors.New(string(rr.Body()))
 		}
-		return rr, errors.New(bhErr.Message)
+		return rr, err
 	}
 	return rr, nil
 }
 
-func (b *bullhornClient) SubscribeToEvents(
-	subscriptionId string, entities []string, eventTypes []string,
-) (*resty.Response, *SubscribeEventResponse, error) {
+func (b *bullhornClient) SubscribeToEvents(subscriptionId string, entities []string, eventTypes []string) (*resty.Response, *SubscribeEventResponse, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
 		return nil, nil, err
@@ -600,13 +633,20 @@ func (b *bullhornClient) SubscribeToEvents(
 	params["eventTypes"] = strings.Join(eventTypes, ",")
 	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
 	rr, cr, err := b.B.Call(requestUrl, "put", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "put", b.getHeaders(), params, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var subscribeResponse SubscribeEventResponse
 	err = b.B.ParseResponse(cr.Data, &subscribeResponse)
@@ -616,9 +656,7 @@ func (b *bullhornClient) SubscribeToEvents(
 	return rr, &subscribeResponse, nil
 }
 
-func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (
-	*resty.Response, *UnsubscribeEventResponse, error,
-) {
+func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes []string) (*resty.Response, *UnsubscribeEventResponse, error) {
 	var err error
 	for _, et := range eventTypes {
 		err = b.validateEventTypes(et)
@@ -630,13 +668,20 @@ func (b *bullhornClient) UnsubscribeFromEvents(subscriptionId string, eventTypes
 	params["eventTypes"] = strings.Join(eventTypes, ",")
 	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
 	rr, cr, err := b.B.Call(requestUrl, "delete", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "delete", b.getHeaders(), params, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var unsubscribeEventResponse UnsubscribeEventResponse
 	err = b.B.ParseResponse(cr.Data, &unsubscribeEventResponse)
@@ -656,13 +701,20 @@ func (b *bullhornClient) FetchEvents(subscriptionId string, size uint64) (*resty
 
 	requestUrl := fmt.Sprintf("%s/event/subscription/%s", b.ApiUrl, subscriptionId)
 	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	}
 	if err != nil {
 		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
 			return rr, nil, errors.New(string(rr.Body()))
 		}
-		return rr, nil, errors.New(bhErr.Message)
+		return rr, nil, err
 	}
 	var fetchEventResponse FetchEventResponse
 	err = b.B.ParseResponse(cr.Data, &fetchEventResponse)
@@ -670,6 +722,66 @@ func (b *bullhornClient) FetchEvents(subscriptionId string, size uint64) (*resty
 		return rr, nil, err
 	}
 	return rr, &fetchEventResponse, nil
+}
+
+func (b *bullhornClient) GetAttachmentsForEntity(entity string, entityId int, options QueryOptions) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(entity)
+	if err != nil {
+		return nil, nil, err
+	}
+	params := make(map[string]string)
+	params["fields"] = strings.Join(options.Fields[:], ",")
+
+	requestUrl := fmt.Sprintf("%s/entity/%s/%d/fileAttachments", b.ApiUrl, entity, entityId)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	}
+	if err != nil {
+		var bhErr Error
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, err
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	return rr, dataMap["data"], nil
+}
+
+func (b *bullhornClient) GetFileForEntity(entity string, entityId int, fileId int) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	requestUrl := fmt.Sprintf("%s/file/%s/%d/%d", b.ApiUrl, entity, entityId, fileId)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
+	}
+	if err != nil {
+		var bhErr Error
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, err
+	}
+	data := cr.Data.(map[string]interface{})
+	return rr, data, nil
 }
 
 func (b *bullhornClient) updateTokensForClient() error {
@@ -682,7 +794,7 @@ func (b *bullhornClient) updateTokensForClient() error {
 		LoginUrl:          b.LoginUrl,
 		RestTokenTTL:      b.RestTokenTtl,
 	}
-	rr, accessTokenResponse, err := getNewAccessAndRefreshToken(b.B, params, b.RefreshToken)
+	_, accessTokenResponse, err := getNewAccessAndRefreshToken(b.B, params, b.RefreshToken)
 	if err != nil {
 		rr, tokenResponse, err := authenticate(b.B, params)
 		if err != nil {
@@ -714,54 +826,4 @@ func (b *bullhornClient) checkAndUpdateTokens() error {
 		return b.updateTokensForClient()
 	}
 	return nil
-}
-
-func (b *bullhornClient) GetAttachmentsForEntity(entity string, entityId int, options QueryOptions) (
-	*resty.Response, interface{}, error,
-) {
-	err := b.checkAndUpdateTokens()
-	if err != nil {
-		return nil, nil, err
-	}
-	err = b.validateEntity(entity)
-	if err != nil {
-		return nil, nil, err
-	}
-	params := make(map[string]string)
-	params["fields"] = strings.Join(options.Fields[:], ",")
-
-	requestUrl := fmt.Sprintf("%s/entity/%s/%d/fileAttachments", b.ApiUrl, entity, entityId)
-	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
-	if err != nil {
-		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
-			return rr, nil, errors.New(string(rr.Body()))
-		}
-		return rr, nil, errors.New(bhErr.Message)
-	}
-	dataMap := cr.Data.(map[string]interface{})
-	return rr, dataMap["data"], nil
-}
-
-func (b *bullhornClient) GetFileForEntity(entity string, entityId int, fileId int) (
-	*resty.Response, interface{}, error,
-) {
-	err := b.checkAndUpdateTokens()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	requestUrl := fmt.Sprintf("%s/file/%s/%d/%d", b.ApiUrl, entity, entityId, fileId)
-	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), nil, nil)
-	if err != nil {
-		var bhErr Error
-		err := json.Unmarshal(rr.Body(), &bhErr)
-		if err != nil {
-			return rr, nil, errors.New(string(rr.Body()))
-		}
-		return rr, nil, errors.New(bhErr.Message)
-	}
-	data := cr.Data.(map[string]interface{})
-	return rr, data, nil
 }
