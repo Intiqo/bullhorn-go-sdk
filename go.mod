@@ -1,4 +1,4 @@
-module github.com/adwitiyaio/bullhorn-go-sdk
+module github.com/Intiqo/bullhorn-go-sdk
 
 go 1.17
 
