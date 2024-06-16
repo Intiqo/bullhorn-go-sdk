@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 This is an unofficial Golang SDK to integrate with the Bullhorn system
 
@@ -6,11 +6,11 @@ This is an unofficial Golang SDK to integrate with the Bullhorn system
 
 ### Latest Version
 
-`go get github.com/adwitiyaio/bullhorn-go-sdk`
+`go get github.com/Intiqo/bullhorn-go-sdk`
 
 ### Specific Version
 
-`go get github.com/adwitiyaio/bullhorn-go-sdk@v0.1.2`
+`go get github.com/Intiqo/bullhorn-go-sdk@v0.1.2`
 
 ## Authentication / Obtaining a client
 
@@ -18,20 +18,20 @@ This is an unofficial Golang SDK to integrate with the Bullhorn system
 
 ```go
 ap := &bullhorn.AuthParams{
-			ClientId:          "",
-			ClientSecret:      "",
-			Username:          "",
-			Password:          "",
-			AuthenticationUrl: "",
-			LoginUrl:          "",
-			ApiUrl:            "",
-			RestTokenTTL:      1440,
-			AuthorizationCode: "",
-			AccessToken:       "",
-			RefreshToken:      "",
-			RestToken:         "",
-		}
-		c, err := bullhorn.NewClient(ap)
+   ClientId:          "",
+   ClientSecret:      "",
+   Username:          "",
+   Password:          "",
+   AuthenticationUrl: "",
+   LoginUrl:          "",
+   ApiUrl:            "",
+   RestTokenTTL:      1440,
+   AuthorizationCode: "",
+   AccessToken:       "",
+   RefreshToken:      "",
+   RestToken:         "",
+  }
+  c, err := bullhorn.NewClient(ap)
 ```
 
 ### Mandatory Parameters
@@ -58,15 +58,15 @@ For example, to use the GET Entity API, you can invoke the below method:
 
 ```go
 type QueryOptions struct {
-	Fields       []string
-	Associations []string
-	Layout       string
-	Meta         string
-	ShowEditable string
-	Start        int
-	Count        int
-	OrderBy      string
-	Sort         string
+ Fields       []string
+ Associations []string
+ Layout       string
+ Meta         string
+ ShowEditable string
+ Start        int
+ Count        int
+ OrderBy      string
+ Sort         string
 }
 ```
 
