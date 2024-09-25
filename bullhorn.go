@@ -18,6 +18,13 @@ type QueryOptions struct {
 	Sort         string
 }
 
+type GetAssociationInput struct {
+	IDs              []int `json:"ids"`
+	Count            *int  `json:"count"`
+	Start            *int  `json:"start"`
+	ShowTotalMatched *bool `json:"showTotalMatched"`
+}
+
 // Client ... A client to interact with Bullhorn APIs
 //
 // See https://bullhorn.github.io/rest-api-docs/entityref.html for entity reference
@@ -34,6 +41,24 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-entity for more information
 	GetEntity(name string, id int, options QueryOptions) (*resty.Response, interface{}, error)
+	// GetMultipleEntities ... Get multiple entities by their IDs
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#multiple-entities for more information
+	GetMultipleEntities(name string, ids []int, options QueryOptions) (*resty.Response, interface{}, error)
+	// GetAssociations ... Get associated records for an entity
+	//
+	// Entity should be a valid Bullhorn Entity name
+	//
+	// Association should be a valid Bullhorn Association name for the entity
+	//
+	// ShowTotalMatched will be set to true by default, pass false if you don't want to show the total matched records
+	//
+	// Use Count & Start for pagination
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#association for more information
+	GetAssociations(entity string, association string, in GetAssociationInput) (*resty.Response, interface{}, error)
 	// QueryEntity ... Query an entity with criteria
 	//
 	// Name should be a valid Bullhorn Entity name

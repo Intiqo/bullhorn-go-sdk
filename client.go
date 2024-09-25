@@ -377,6 +377,83 @@ func (b *bullhornClient) GetEntity(name string, id int, options QueryOptions) (*
 	return rr, dataMap["data"], nil
 }
 
+func (b *bullhornClient) GetMultipleEntities(name string, ids []int, options QueryOptions) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	params := make(map[string]string)
+	params["fields"] = strings.Join(options.Fields[:], ",")
+
+	idsString := make([]string, len(ids))
+	for i, id := range ids {
+		idsString[i] = strconv.Itoa(id)
+	}
+
+	requestUrl := fmt.Sprintf("%s/entity/%s/%s", b.ApiUrl, name, strings.Join(idsString, ","))
+	if len(options.Associations) > 0 {
+		requestUrl = fmt.Sprintf("%s/entity/%s/%s/%s", b.ApiUrl, name, strings.Join(idsString, ","), strings.Join(options.Associations[:], ","))
+	}
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	}
+	if err != nil {
+		var bhErr Error
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, err
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	return rr, dataMap["data"], nil
+}
+
+func (b *bullhornClient) GetAssociations(entity string, association string, in GetAssociationInput) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(entity)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if in.ShowTotalMatched == nil {
+		in.ShowTotalMatched = new(bool)
+		*in.ShowTotalMatched = true
+	}
+
+	requestUrl := fmt.Sprintf("%s/association/%s/%s", b.ApiUrl, entity, association)
+	rr, cr, err := b.B.Call(requestUrl, "post", b.getHeaders(), nil, in)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "post", b.getHeaders(), nil, in)
+	}
+	if err != nil {
+		var bhErr Error
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, err
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	return rr, dataMap["data"], nil
+}
+
 func (b *bullhornClient) QueryEntity(name string, query string, options QueryOptions) (*resty.Response, interface{}, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
