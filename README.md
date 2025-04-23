@@ -74,6 +74,7 @@ type QueryOptions struct {
 
 - [x] Ping
 - [x] GetEntity
+- [x] Get My Entities
 - [x] QueryEntity
 - [x] SearchEntity
 - [x] CreateEntity
@@ -87,7 +88,6 @@ type QueryOptions struct {
 - [] Get Entitlements
 - [] Effective Dated Entity
 - [] Get Department Entities
-- [] Get My Entities
 - [] Get File
 - [] Get Entity File Attachments
 - [] Put File
