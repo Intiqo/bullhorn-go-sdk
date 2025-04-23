@@ -418,6 +418,51 @@ func (b *bullhornClient) GetMultipleEntities(name string, ids []int, options Que
 	return rr, dataMap["data"], nil
 }
 
+func (b *bullhornClient) GetAllEntities(name string, options QueryOptions) (*resty.Response, interface{}, error) {
+	err := b.checkAndUpdateTokens()
+	if err != nil {
+		return nil, nil, err
+	}
+	err = b.validateEntity(name)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	count := 10
+	if options.Count != 0 {
+		count = options.Count
+	}
+	start := 0
+	if options.Start != 0 {
+		start = options.Start
+	}
+
+	params := make(map[string]string)
+	params["fields"] = strings.Join(options.Fields[:], ",")
+	params["count"] = strconv.Itoa(count)
+	params["start"] = strconv.Itoa(start)
+
+	requestUrl := fmt.Sprintf("%s/my%ss", b.ApiUrl, name)
+	rr, cr, err := b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	if rr.RawResponse.StatusCode == 401 {
+		err = b.updateTokensForClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		rr, cr, err = b.B.Call(requestUrl, "get", b.getHeaders(), params, nil)
+	}
+	if err != nil {
+		var bhErr Error
+		jErr := json.Unmarshal(rr.Body(), &bhErr)
+		if jErr != nil {
+			return rr, nil, errors.New(string(rr.Body()))
+		}
+		return rr, nil, err
+	}
+	dataMap := cr.Data.(map[string]interface{})
+	return rr, dataMap["data"], nil
+}
+
 func (b *bullhornClient) GetAssociations(entity string, association string, in GetAssociationInput) (*resty.Response, interface{}, error) {
 	err := b.checkAndUpdateTokens()
 	if err != nil {
