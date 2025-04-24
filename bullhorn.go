@@ -47,6 +47,12 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#multiple-entities for more information
 	GetMultipleEntities(name string, ids []int, options QueryOptions) (*resty.Response, interface{}, error)
+	// GetAllEntities ... Get all entities
+ 	//
+ 	// Name should be a valid Bullhorn Entity name
+ 	//
+ 	// See https://bullhorn.github.io/rest-api-docs/index.html#get-my-entity-s for more information
+ 	GetAllEntities(name string, options QueryOptions) (*resty.Response, interface{}, error)
 	// GetAssociations ... Get associated records for an entity
 	//
 	// Entity should be a valid Bullhorn Entity name
