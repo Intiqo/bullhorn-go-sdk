@@ -65,6 +65,16 @@ type Client interface {
 	//
 	// See https://bullhorn.github.io/rest-api-docs/index.html#association for more information
 	GetAssociations(entity string, association string, in GetAssociationInput) (*resty.Response, interface{}, error)
+	// GetToManyAssociations ... Get to-many associated entities for a specific entity
+	//
+	// Name should be a valid Bullhorn Entity name
+	//
+	// Association should be a valid to-many association field name for the entity
+	//
+	// Options can include fields, count, start for pagination
+	//
+	// See https://bullhorn.github.io/rest-api-docs/index.html#to-many-associations for more information
+	GetToManyAssociations(name string, id int, association string, options QueryOptions) (*resty.Response, interface{}, error)
 	// QueryEntity ... Query an entity with criteria
 	//
 	// Name should be a valid Bullhorn Entity name

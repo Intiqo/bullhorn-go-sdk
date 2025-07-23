@@ -70,6 +70,38 @@ type QueryOptions struct {
 }
 ```
 
+## To-Many Associations
+
+The SDK provides complete support for managing to-many associations between entities:
+
+### Get To-Many Associations
+```go
+// Get skills for a candidate
+options := bullhorn.QueryOptions{
+    Fields: []string{"id", "name", "skillLevel"},
+    Count:  10,
+}
+response, skills, err := client.GetToManyAssociations(
+    bullhorn.CandidateEntity,
+    3084, // candidate ID
+    "primarySkills",
+    options,
+)
+```
+
+### Add To-Many Associations
+```go
+// Add skills to a candidate
+skillIds := []string{"964", "684", "253"}
+response, result, err := client.AssociateEntities(
+    bullhorn.CandidateEntity,
+    3084, // candidate ID
+    "primarySkills",
+    skillIds,
+)
+```
+
+
 ## Supported APIs
 
 - [x] Ping
@@ -81,6 +113,7 @@ type QueryOptions struct {
 - [x] UpdateEntity
 - [x] DeleteEntity
 - [x] AssociateEntities
+- [x] GetToManyAssociations
 
 ## APIs to Support
 
