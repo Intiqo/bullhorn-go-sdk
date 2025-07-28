@@ -65,6 +65,8 @@ func (b *bullhornClient) validateEntity(name string) error {
 		return nil
 	case CertificationEntity:
 		return nil
+	case PlacementCertificationEntity:
+		return nil
 	}
 	return fmt.Errorf("unsupported entity %s", name)
 }
@@ -312,6 +314,23 @@ func (b *bullhornClient) ParseResponseForEntity(name string, data interface{}, a
 				return nil, err
 			}
 			return certification, nil
+		}
+	case PlacementCertificationEntity:
+		var placementCertification PlacementCertification
+		var placementCertifications []PlacementCertification
+		var err error
+		if isArray {
+			err = b.B.ParseResponse(data, &placementCertifications)
+			if err != nil {
+				return nil, err
+			}
+			return placementCertifications, nil
+		} else {
+			err = b.B.ParseResponse(data, &placementCertification)
+			if err != nil {
+				return nil, err
+			}
+			return placementCertification, nil
 		}
 	}
 	return nil, fmt.Errorf("unsupported entity %s", name)
